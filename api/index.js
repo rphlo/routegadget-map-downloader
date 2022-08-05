@@ -7,7 +7,7 @@ const stream = require('stream')
 
 const app = express()
 
-const drawMapWithCourse = (img, coordinates) => {
+const drawMapWithCourse = (img, coordinatesArray) => {
     const canvas =  createCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
   
@@ -25,69 +25,68 @@ const drawMapWithCourse = (img, coordinates) => {
     const circleSize = 20
     ctx2.strokeStyle = 'purple';
     ctx2.beginPath();
+    coordinatesArray.forEach(coordinates => {
+      for(let i=0; i < coordinates.length-1; i++) {
+          // avoid division by zero
+          if (coordinates[i][0] === coordinates[i+1][0]) {
+              coordinates[i][0] -= 0.0001
+          }
 
-    for(let i=0; i < coordinates.length-1; i++) {
-        // avoid division by zero
-        if (coordinates[i][0] === coordinates[i+1][0]) {
-            coordinates[i][0] -= 0.0001
-        }
-
-        var StartFromA = coordinates[i][0] < coordinates[i+1][0]
-        var ptA = StartFromA ? coordinates[i] : coordinates[i+1]
-        var ptB = StartFromA ? coordinates[i+1] : coordinates[i]
-        var angle = Math.atan((-ptB[1] + ptA[1]) / (ptB[0] - ptA[0]))
-        if (i === 0) {
-            let ptS = ptB;
-            if (StartFromA) {
-                ptS = ptA;
-            }
-            const x = ptS[0] - (StartFromA ? -1: 1)
-            const y = (StartFromA ? 1: -1) - ptS[1]
-            const teta = angle + 2 * Math.PI / 3
-            const beta = angle - 2 * Math.PI / 3
-            
-            ctx2.moveTo(
-                Math.round(x * circleSize * Math.cos(angle)),
-                Math.round(y * circleSize * Math.sin(angle))
-            )
-            ctx2.lineTo(
-                Math.round(x * circleSize * Math.cos(teta)),
-                Math.round(y * circleSize * Math.sin(teta))
-            )
-            ctx2.lineTo(
-                Math.round(x * circleSize * Math.cos(beta)),
-                Math.round(y * circleSize * Math.sin(beta))
-            )
-            ctx2.lineTo(
-                Math.round(x * circleSize * Math.cos(angle)),
-                Math.round(y * circleSize * Math.sin(angle))
-            )
-        }
-        ctx2.moveTo(
-            Math.round(ptA[0] + circleSize * Math.cos(angle)),
-            Math.round(-ptA[1] + circleSize * Math.sin(angle))
-        )
-        ctx2.lineTo(
-            Math.round(ptB[0] - circleSize * Math.cos(angle)),
-            Math.round(-ptB[1] - circleSize * Math.sin(angle))
-        )
-        let ptO = ptA
-        if (StartFromA) {
-            ptO = ptB
-        }
-        ctx2.moveTo(
-            Math.round(ptO[0] + circleSize),
-            Math.round(-ptO[1])
-        )
-        ctx2.arc(coordinates[i+1][0], -coordinates[i+1][1], circleSize, 0, 2*Math.PI)
-        if (i === coordinates.length-2) {
-            ctx2.moveTo(
-                Math.round(ptO[0] + circleSize-5),
-                Math.round(-ptO[1])
-            )
-            ctx2.arc(coordinates[i+1][0], -coordinates[i+1][1], circleSize-10, 0, 2*Math.PI)    
-        }
-    }
+          var StartFromA = coordinates[i][0] < coordinates[i+1][0]
+          var ptA = StartFromA ? coordinates[i] : coordinates[i+1]
+          var ptB = StartFromA ? coordinates[i+1] : coordinates[i]
+          var angle = Math.atan((-ptB[1] + ptA[1]) / (ptB[0] - ptA[0]))
+          if (i === 0) {
+              let ptS = ptB;
+              if (StartFromA) {
+                  ptS = ptA;
+              }
+              const teta = angle + 2 * Math.PI / 3
+              const beta = angle - 2 * Math.PI / 3
+              
+              ctx2.moveTo(
+                  Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(angle)),
+                  Math.round((StartFromA ? 1: -1) * circleSize * Math.sin(angle) - ptS[1])
+              )
+              ctx2.lineTo(
+                  Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(teta)),
+                  Math.round((StartFromA ? 1: -1) * circleSize * Math.sin(teta) - ptS[1])
+              )
+              ctx2.lineTo(
+                  Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(beta)),
+                  Math.round((StartFromA ? 1: -1) * circleSize * Math.sin(beta) - ptS[1])
+              )
+              ctx2.lineTo(
+                  Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(angle)),
+                  Math.round((StartFromA ? 1: -1) * circleSize * Math.sin(angle) - ptS[1])
+              )
+          }
+          ctx2.moveTo(
+              Math.round(ptA[0] + circleSize * Math.cos(angle)),
+              Math.round(-ptA[1] + circleSize * Math.sin(angle))
+          )
+          ctx2.lineTo(
+              Math.round(ptB[0] - circleSize * Math.cos(angle)),
+              Math.round(-ptB[1] - circleSize * Math.sin(angle))
+          )
+          let ptO = ptA
+          if (StartFromA) {
+              ptO = ptB
+          }
+          ctx2.moveTo(
+              Math.round(ptO[0] + circleSize),
+              Math.round(-ptO[1])
+          )
+          ctx2.arc(coordinates[i+1][0], -coordinates[i+1][1], circleSize, 0, 2*Math.PI)
+          if (i === coordinates.length-2) {
+              ctx2.moveTo(
+                  Math.round(ptO[0] + circleSize-5),
+                  Math.round(-ptO[1])
+              )
+              ctx2.arc(coordinates[i+1][0], -coordinates[i+1][1], circleSize-10, 0, 2*Math.PI)    
+          }
+      }
+    })
     ctx2.stroke();
     ctx.globalAlpha = 0.7;
     ctx.drawImage(canvas2, 0, 0);
@@ -124,6 +123,23 @@ const getMap = async (req, res, next) => {
   const parsedUrl = url.parse(eventUrl, true)
   const gadgetRootPath = parsedUrl.pathname.split('/').slice(0, -2).join('/') + "/kartat"
   const eventId = parseInt(parsedUrl.query.id, 10);
+
+  const cFileUrl = parsedUrl.protocol + '//' + parsedUrl.host + '/' + gadgetRootPath + "/kilpailijat_" + eventId + ".txt";
+  console.log(cFileUrl)
+  const competitorFileRequest = await fetch(cFileUrl)
+  if (competitorFileRequest.status != 200) {
+    return res.status(200).send({error: "Cannot access competitor file"})
+  }
+  const cFile = await competitorFileRequest.text();
+  const clines = cFile.split('\n').map((l) => l.trim()).filter(Boolean)
+  const routesIds = clines.map((line) => {
+    return line.split('|');
+  }).filter((d) => {
+    return d?.[5] == req.body.classId
+  }).map((d) => d?.[6]);
+  if (!routesIds.length) {
+    return res.status(200).send({error: "Cannot find routes in competitors file"})
+  }
   const dataFile = parsedUrl.protocol + '//' + parsedUrl.host + '/' + gadgetRootPath + "/ratapisteet_" + eventId + ".txt";
   console.log(dataFile)
   const routesFileRequest = await fetch(dataFile)
@@ -133,16 +149,16 @@ const getMap = async (req, res, next) => {
   const routesFile = await routesFileRequest.text();
   console.log(routesFile)
   const lines = routesFile.split('\n').map((l) => l.trim()).filter(Boolean)
-  const routeData = lines.map((line) => {
+  const routesData = lines.map((line) => {
     const data = line.split('|');
     return [data[0], data.slice(1).join('|')]
-  }).find((d) => {
-    return d?.[0] == req.body.classId
-  })?.[1]
-  if (!routeData) {
-    return res.status(200).send({error: "Cannot find class in routes file"})
+  }).filter((d) => {
+    return routesIds.includes(d?.[0])
+  }).map((d) => d?.[1])
+  if (!routesData.length) {
+    return res.status(200).send({error: "Cannot find routes in routes file"})
   }
-  const coordinates = routeData.split('N').map((xy) => xy && xy.split(';').map((x) => parseInt(x, 10))).filter(Boolean)
+  const coordinates = routesData.map(routeData => routeData.split('N').map((xy) => xy && xy.split(';').map((x) => parseInt(x, 10))).filter(Boolean))
   console.log(coordinates)
   
   const mapListFileURL = parsedUrl.protocol + '//' + parsedUrl.host + '/' + gadgetRootPath + "/kisat.txt";
