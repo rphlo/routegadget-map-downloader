@@ -132,11 +132,12 @@ const getMap = async (req, res, next) => {
   }
   const cFile = await competitorFileRequest.text();
   const clines = cFile.split('\n').map((l) => l.trim()).filter(Boolean)
-  const routesIds = clines.map((line) => {
+  const routesIdsRaw = clines.map((line) => {
     return line.split('|');
   }).filter((d) => {
     return d?.[5] == req.body.classId
-  }).map((d) => d?.[6]).filter((value, index, self) => self.indexOf(value) === index);
+  }).map((d) => d?.[6])
+  const routesIds = [...new Set(routesIdsRaw)];
   if (!routesIds.length) {
     return res.status(200).send({error: "Cannot find routes in competitors file"})
   }
