@@ -41,21 +41,50 @@ const drawMapWithCourse = (img, coordinates) => {
             if (StartFromA) {
                 ptS = ptA;
             }
-            ctx2.moveTo(Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(angle)), Math.round(-ptS[1]  - (StartFromA ? -1: 1) * circleSize * Math.sin(angle)))
-            ctx2.lineTo(Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(angle + 2*Math.PI / 3)), Math.round(-ptS[1]  - (StartFromA ? -1: 1) * circleSize * Math.sin(angle + 2*Math.PI / 3)))
-            ctx2.lineTo(Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(angle - 2*Math.PI / 3)), Math.round(-ptS[1]  - (StartFromA ? -1: 1) * circleSize * Math.sin(angle - 2*Math.PI / 3)))
-            ctx2.lineTo(Math.round(ptS[0] - (StartFromA ? -1: 1) * circleSize * Math.cos(angle)), Math.round(-ptS[1]  - (StartFromA ? -1: 1) * circleSize * Math.sin(angle)))
+            const x = ptS[0] - (StartFromA ? -1: 1)
+            const y = (StartFromA ? 1: -1) - ptS[1]
+            const teta = angle + 2 * Math.PI / 3
+            const beta = angle - 2 * Math.PI / 3
+            
+            ctx2.moveTo(
+                Math.round(x * circleSize * Math.cos(angle)),
+                Math.round(y * circleSize * Math.sin(angle))
+            )
+            ctx2.lineTo(
+                Math.round(x * circleSize * Math.cos(teta)),
+                Math.round(y * circleSize * Math.sin(teta))
+            )
+            ctx2.lineTo(
+                Math.round(x * circleSize * Math.cos(beta)),
+                Math.round(y * circleSize * Math.sin(beta))
+            )
+            ctx2.lineTo(
+                Math.round(x * circleSize * Math.cos(angle)),
+                Math.round(y * circleSize * Math.sin(angle))
+            )
         }
-        ctx2.moveTo(Math.round(ptA[0] + circleSize * Math.cos(angle)), Math.round(-ptA[1] + circleSize * Math.sin(angle)))
-        ctx2.lineTo(Math.round(ptB[0] - circleSize * Math.cos(angle)), Math.round(-ptB[1] - circleSize * Math.sin(angle)))
+        ctx2.moveTo(
+            Math.round(ptA[0] + circleSize * Math.cos(angle)),
+            Math.round(-ptA[1] + circleSize * Math.sin(angle))
+        )
+        ctx2.lineTo(
+            Math.round(ptB[0] - circleSize * Math.cos(angle)),
+            Math.round(-ptB[1] - circleSize * Math.sin(angle))
+        )
         let ptO = ptA
         if (StartFromA) {
             ptO = ptB
         }
-        ctx2.moveTo(Math.round(ptO[0] + circleSize), Math.round(-ptO[1]))
+        ctx2.moveTo(
+            Math.round(ptO[0] + circleSize),
+            Math.round(-ptO[1])
+        )
         ctx2.arc(coordinates[i+1][0], -coordinates[i+1][1], circleSize, 0, 2*Math.PI)
         if (i === coordinates.length-2) {
-            ctx2.moveTo(Math.round(ptO[0] + circleSize-5), Math.round(-ptO[1]))
+            ctx2.moveTo(
+                Math.round(ptO[0] + circleSize-5),
+                Math.round(-ptO[1])
+            )
             ctx2.arc(coordinates[i+1][0], -coordinates[i+1][1], circleSize-10, 0, 2*Math.PI)    
         }
     }
